@@ -52,11 +52,11 @@ RUN npm ci --only=production --workspaces
 COPY --from=builder /app/frontend/dist ./frontend/dist
 COPY --from=builder /app/backend/dist ./backend/dist
 
-# 复制 Prisma 生成的客户端
-COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
-
 # 复制必要的配置文件
 COPY backend/prisma ./backend/prisma
+
+# 生成 Prisma 客户端
+RUN cd backend && npx prisma generate
 
 # 设置环境变量
 ENV NODE_ENV=production
