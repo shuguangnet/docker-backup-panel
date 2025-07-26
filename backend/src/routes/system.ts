@@ -11,7 +11,7 @@ router.get('/settings', async (req, res) => {
     });
     
     // 转换为键值对象格式
-    const settingsMap = settings.reduce((acc, setting) => {
+    const settingsMap = settings.reduce((acc: Record<string, string>, setting: any) => {
       acc[setting.key] = setting.value;
       return acc;
     }, {} as Record<string, string>);
