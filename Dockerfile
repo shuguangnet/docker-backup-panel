@@ -29,33 +29,26 @@ RUN npm run build:frontend
 # 构建后端
 RUN npm run build:backend
 
-# 生成 Prisma 客户端
-RUN cd backend && npx prisma generate
-
 # 生产阶段
 FROM node:18-alpine AS production
 
-# 安装 curl 用于健康检查
-RUN apk add --no-cache curl
-
 WORKDIR /app
 
-# 复制生产依赖
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/frontend/node_modules ./frontend/node_modules
-COPY --from=base /app/backend/node_modules ./backend/node_modules
+# 复制 package.json 文件
+COPY package*.json ./
+COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
+
+# 只安装生产依赖
+RUN npm ci --only=production && \
+    cd frontend && npm ci --only=production && \
+    cd ../backend && npm ci --only=production
 
 # 复制构建产物
 COPY --from=builder /app/frontend/dist ./frontend/dist
 COPY --from=builder /app/backend/dist ./backend/dist
 
-# 复制 Prisma 生成的客户端
-COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
-
 # 复制必要的配置文件
-COPY package*.json ./
-COPY frontend/package*.json ./frontend/
-COPY backend/package*.json ./backend/
 COPY backend/prisma ./backend/prisma
 
 # 设置环境变量
