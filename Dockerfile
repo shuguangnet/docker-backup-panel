@@ -23,6 +23,7 @@ RUN cd frontend && \
 RUN cd backend && \
     rm -rf node_modules package-lock.json && \
     npm install && \
+    npx prisma generate && \
     cd ..
 
 # 构建前端
@@ -30,9 +31,6 @@ RUN cd frontend && npm run build
 
 # 构建后端
 RUN cd backend && npm run build
-
-# 生成 Prisma 客户端
-RUN cd backend && npx prisma generate
 
 # 生产阶段
 FROM node:18-alpine AS production
