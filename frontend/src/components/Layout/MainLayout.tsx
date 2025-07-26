@@ -6,7 +6,6 @@ import {
   FileText,
   Database,
   Menu,
-  X,
   User,
   LogOut,
   Terminal,

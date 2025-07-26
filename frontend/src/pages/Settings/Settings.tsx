@@ -5,7 +5,7 @@ import { Settings as SettingsIcon, Save, Database, Folder, Clock } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+
 
 interface SystemSettings {
   backupPath: string;
@@ -16,7 +16,7 @@ interface SystemSettings {
 }
 
 const Settings: React.FC = () => {
-  const { data: settings, isLoading } = useQuery<SystemSettings>(
+  const { data: settings } = useQuery<SystemSettings>(
     'system-settings',
     () => fetch('/api/system/settings').then(res => res.json())
   );

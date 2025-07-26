@@ -5,7 +5,6 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  TrendingUp,
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +27,7 @@ interface RecentLog {
 
 const Dashboard: React.FC = () => {
   // 获取系统统计数据
-  const { data: stats, isLoading: statsLoading } = useQuery<SystemStats>(
+  const { data: stats } = useQuery<SystemStats>(
     'system-stats',
     () => fetch('/api/logs/stats/summary').then(res => res.json())
   );
