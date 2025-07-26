@@ -9,20 +9,22 @@ WORKDIR /app
 # 复制所有源代码
 COPY . .
 
-# 安装所有依赖（包括开发依赖）
-RUN npm ci --workspaces
-
-# 修复 Rollup 原生依赖问题
+# 清理并重新安装依赖以解决 Rollup 原生依赖问题
 RUN cd frontend && \
     rm -rf node_modules package-lock.json && \
     npm install && \
     cd ..
 
+RUN cd backend && \
+    rm -rf node_modules package-lock.json && \
+    npm install && \
+    cd ..
+
 # 构建前端
-RUN npm run build:frontend
+RUN cd frontend && npm run build
 
 # 构建后端
-RUN npm run build:backend
+RUN cd backend && npm run build
 
 # 生成 Prisma 客户端
 RUN cd backend && npx prisma generate
