@@ -7,7 +7,7 @@ import Login from './pages/Auth/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import TaskList from './pages/Tasks/TaskList';
 import TaskDetail from './pages/Tasks/TaskDetail';
-import LogList from './pages/Logs/LogList';
+import LogList from './pages/Logs/LogList.tsx';
 import Settings from './pages/Settings/Settings';
 import ScriptList from './pages/Scripts/ScriptList';
 
