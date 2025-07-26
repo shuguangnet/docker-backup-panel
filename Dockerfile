@@ -1,8 +1,12 @@
 # 多阶段构建 Dockerfile
-FROM node:18-alpine AS builder
+FROM node:18 AS builder
 
 # 安装构建依赖
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
