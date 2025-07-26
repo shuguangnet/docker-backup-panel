@@ -12,6 +12,12 @@ COPY . .
 # 安装所有依赖（包括开发依赖）
 RUN npm ci --workspaces
 
+# 修复 Rollup 原生依赖问题
+RUN cd frontend && \
+    rm -rf node_modules package-lock.json && \
+    npm install && \
+    cd ..
+
 # 构建前端
 RUN npm run build:frontend
 
