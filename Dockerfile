@@ -1,20 +1,20 @@
 # 多阶段构建 Dockerfile
-FROM node:18-alpine AS builder
+FROM node:18 AS builder
 
 WORKDIR /app
 
-# 复制根目录和子项目的 package.json
+# 复制所有 package.json 文件
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# 使用 workspaces 安装依赖
+# 安装依赖
 RUN npm ci
 
 # 复制源代码
 COPY . .
 
-# 构建前端和后端
+# 构建项目
 RUN npm run build
 
 # 生产阶段
@@ -54,7 +54,7 @@ USER nextjs
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3001/health || exit 1
+  CMD curl -f http://localhost:3001/health || exit 1
 
 # 启动命令
 CMD ["node", "backend/dist/server.js"]
