@@ -22,6 +22,17 @@ RUN npm ci --verbose
 # 复制源代码
 COPY . .
 
+# 清理并重新安装依赖以解决 Rollup 原生依赖问题
+RUN cd frontend && \
+    rm -rf node_modules package-lock.json && \
+    npm install && \
+    cd ..
+
+RUN cd backend && \
+    rm -rf node_modules package-lock.json && \
+    npm install && \
+    cd ..
+
 # 分别构建前端和后端，添加详细日志
 RUN echo "开始构建前端..." && \
     cd frontend && \
@@ -74,7 +85,7 @@ USER nextjs
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+    CMD curl -f http://localhost:3001/health || exit 1
 
 # 启动命令
 CMD ["node", "backend/dist/server.js"]
