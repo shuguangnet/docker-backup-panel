@@ -3,24 +3,44 @@ FROM node:18 AS builder
 
 WORKDIR /app
 
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # 复制所有 package.json 文件
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# 安装依赖
-RUN npm ci
+# 清理 npm 缓存并安装依赖
+RUN npm cache clean --force
+RUN npm ci --verbose
 
 # 复制源代码
 COPY . .
 
-# 构建项目
-RUN npm run build
+# 分别构建前端和后端，添加详细日志
+RUN echo "开始构建前端..." && \
+    cd frontend && \
+    npm run build --verbose && \
+    echo "前端构建完成" && \
+    cd ..
+
+RUN echo "开始构建后端..." && \
+    cd backend && \
+    npm run build --verbose && \
+    echo "后端构建完成"
 
 # 生产阶段
 FROM node:18-alpine AS production
 
 WORKDIR /app
+
+# 安装 curl 用于健康检查
+RUN apk add --no-cache curl
 
 # 复制 package.json 文件
 COPY package*.json ./
@@ -28,7 +48,7 @@ COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
 # 只安装生产依赖
-RUN npm ci --only=production
+RUN npm ci --only=production --verbose
 
 # 复制构建产物
 COPY --from=builder /app/frontend/dist ./frontend/dist
