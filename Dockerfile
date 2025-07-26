@@ -10,9 +10,10 @@ COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
 # 安装依赖
+# 修改安装命令，确保在正确的目录中安装依赖
 RUN npm ci --only=production && \
     cd frontend && npm ci --only=production && \
-    cd ../backend && npm ci --only=production
+    cd /app/backend && npm ci --only=production
 
 # 构建阶段
 FROM node:18-alpine AS builder
@@ -73,4 +74,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
 
 # 启动命令
-CMD ["node", "backend/dist/server.js"] 
+CMD ["node", "backend/dist/server.js"]
