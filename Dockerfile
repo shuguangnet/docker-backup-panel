@@ -4,16 +4,13 @@ FROM node:18-alpine AS base
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 文件
+# 复制所有 package.json 文件
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# 安装依赖
-# 修改安装命令，确保在正确的目录中安装依赖
-RUN npm ci --only=production && \
-    cd frontend && npm ci --only=production && \
-    cd /app/backend && npm ci --only=production
+# 安装生产依赖
+RUN npm ci --only=production --workspaces
 
 # 构建阶段
 FROM node:18-alpine AS builder
@@ -24,22 +21,26 @@ WORKDIR /app
 COPY . .
 
 # 安装所有依赖（包括开发依赖）
-RUN npm ci && \
-    cd frontend && npm ci && \
-    cd ../backend && npm ci
+RUN npm ci --workspaces
 
 # 构建前端
-RUN cd frontend && npm run build
+RUN npm run build:frontend
 
 # 构建后端
-RUN cd backend && npm run build
+RUN npm run build:backend
+
+# 生成 Prisma 客户端
+RUN cd backend && npx prisma generate
 
 # 生产阶段
 FROM node:18-alpine AS production
 
+# 安装 curl 用于健康检查
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
-# 安装生产依赖
+# 复制生产依赖
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/frontend/node_modules ./frontend/node_modules
 COPY --from=base /app/backend/node_modules ./backend/node_modules
@@ -47,6 +48,9 @@ COPY --from=base /app/backend/node_modules ./backend/node_modules
 # 复制构建产物
 COPY --from=builder /app/frontend/dist ./frontend/dist
 COPY --from=builder /app/backend/dist ./backend/dist
+
+# 复制 Prisma 生成的客户端
+COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
 
 # 复制必要的配置文件
 COPY package*.json ./
