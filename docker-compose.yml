@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  docker-backup-panel:
+    image: ${DOCKERHUB_USERNAME:-yourusername}/docker_backup_panel:latest
+    container_name: docker-backup-panel
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./data/backup.db
+      - PORT=3001
+      - JWT_SECRET=your-jwt-secret-key-here
+      - CORS_ORIGIN=http://localhost:3001
+    volumes:
+      - ./data:/app/backend/data
+      - ./backups:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - backup-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：添加 Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: docker-backup-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - docker-backup-panel
+    networks:
+      - backup-network
+    profiles:
+      - nginx
+
+networks:
+  backup-network:
+    driver: bridge
+
+volumes:
+  backup-data:
+    driver: local 

@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  docker-backup-panel:
+    image: ${DOCKERHUB_USERNAME:-yourusername}/docker_backup_panel:${TAG:-latest}
+    container_name: docker-backup-panel-prod
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./data/backup.db
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3001}
+      - LOG_LEVEL=info
+    volumes:
+      - backup-data:/app/backend/data
+      - backup-storage:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - backup-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # 生产环境 Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: docker-backup-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - docker-backup-panel
+    networks:
+      - backup-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+
+  # 可选：添加 Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: docker-backup-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-your-redis-password}
+    volumes:
+      - redis-data:/data
+    networks:
+      - backup-network
+    profiles:
+      - redis
+
+networks:
+  backup-network:
+    driver: bridge
+
+volumes:
+  backup-data:
+    driver: local
+  backup-storage:
+    driver: local
+  nginx-logs:
+    driver: local
+  redis-data:
+    driver: local 

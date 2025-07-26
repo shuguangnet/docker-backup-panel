@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model BackupTask {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  containerName String
+  backupPath  String
+  schedule    String   // cron expression
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 关联的备份记录
+  backupLogs  BackupLog[]
+  
+  @@map("backup_tasks")
+}
+
+model BackupLog {
+  id        String   @id @default(cuid())
+  taskId    String
+  status    String   // 改为 String 类型，因为 SQLite 不支持 enum
+  startTime DateTime
+  endTime   DateTime?
+  fileSize  BigInt?
+  filePath  String?
+  errorMessage String?
+  createdAt DateTime @default(now())
+  
+  // 关联的备份任务
+  task      BackupTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("backup_logs")
+}
+
+model SystemSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String?
+  role      String   @default("user") // admin 或 user
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}

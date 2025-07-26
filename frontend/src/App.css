@@ -1,0 +1,7 @@
+.app {
+  @apply h-screen flex flex-col;
+}
+
+.app-content {
+  @apply flex-1 p-0 bg-muted/50 overflow-auto;
+} 
